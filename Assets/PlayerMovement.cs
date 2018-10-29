@@ -1,52 +1,131 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
 
 public class PlayerMovement : MonoBehaviour
 {
 
-	public GameObject trailPrefab;
-	public float counter;
-	public float Speed = 0.5f;
-	
+	//Player Death
+	bool isDead = false;
+	public float death1;
+
+	//Player Tail
+	public GameObject tailPrefab;
+
+	//Player Default Movement
+	private Vector2 dir = Vector2.down;
+
+	//Tail Tracking
+	private List<Transform> tail = new List<Transform>();
+
 	// Use this for initialization
-	void Start () {
-		
+	void Start()
+	{
+		//Movement
+		InvokeRepeating("Move", 0.3f, 0.3f);
+
+		death1 = 0;
+
 	}
 
 	void Update()
 	{
-		counter += Time.deltaTime;
-		if (counter >= 3.0f)
+
+		if (!isDead)
 		{
-			
+			// Move in a new Direction?
+			if (Input.GetKey(KeyCode.RightArrow))
+				dir = Vector2.right;
+			else if (Input.GetKey(KeyCode.DownArrow))
+				dir = -Vector2.up; // '-up' means 'down'
+			else if (Input.GetKey(KeyCode.LeftArrow))
+				dir = -Vector2.right; // '-right' means 'left'
+			else if (Input.GetKey(KeyCode.UpArrow))
+				dir = Vector2.up;
+		}
+		if (Input.GetKey(KeyCode.R))
+		{
+			SceneManager.LoadScene("SampleScene");
 		}
 	}
-	
-	// Update is called once per frame
-	void FixedUpdate()
+
+	void Move()
 	{
-		//float moveHorizontal = Input.GetAxis("Horizontal");
+		if (!isDead)
+		{
+			// Save current position (gap will be here)
+			Vector2 v = transform.position;
 
-		if (Input.GetKey(KeyCode.UpArrow))
-		{
-			transform.Translate(Vector2.up * Speed * Time.deltaTime);
-			
-		}
+			// Move head into new direction (now there is a gap)
+			transform.Translate(dir);
 
-		if (Input.GetKey(KeyCode.DownArrow))
-		{
-			transform.Translate(Vector2.down * Speed * Time.deltaTime);
-		}
-		
-		if (Input.GetKey(KeyCode.RightArrow))
-		{
-			transform.Translate(Vector2.right * Speed * Time.deltaTime);
-		}
-		
-		if (Input.GetKey(KeyCode.LeftArrow))
-		{
-			transform.Translate(Vector2.left * Speed * Time.deltaTime);
+			// Load Prefab into the world
+			GameObject g = (GameObject) Instantiate(tailPrefab,
+				v,
+				Quaternion.identity);
+
+			// Keep track of it in our tail list
+			tail.Insert(0, g.transform);
+
+			if (tail.Count > 0)
+			{
+				// Do we have a Tail?
+				// Move last Tail Element to where the Head was
+				tail.Last().position = v;
+
+				// Add to front of list, remove from the back
+				tail.Insert(0, tail.Last());
+				tail.RemoveAt(tail.Count - 5);
+			}
+
 		}
 	}
-}
+
+	void OnTriggerEnter2D(Collider2D col)
+		{
+			if (col.gameObject.CompareTag("PlayerTrail"))
+			{
+				isDead = true;
+				
+				if (isDead == true)
+				{
+					//SceneManager.LoadScene("SampleScene");
+
+					
+					transform.position = new Vector2(2f,0f);
+					isDead = false;
+
+					death1 = death1 + 1;
+				
+				
+				}
+	
+			}
+			
+			if (col.gameObject.CompareTag("Borders"))
+			{
+				isDead = true;
+
+				if (isDead == true)
+				{
+					
+					transform.position = new Vector2(2f,0f);
+					isDead = false;
+
+
+					death1 = death1 + 1;
+				}
+				
+			}
+			
+			
+
+		}
+	
+	}
+
+	

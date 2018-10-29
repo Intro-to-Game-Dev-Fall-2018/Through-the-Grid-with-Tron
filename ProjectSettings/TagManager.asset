@@ -5,6 +5,10 @@ TagManager:
   serializedVersion: 2
   tags:
   - Borders
+  - PlayerTrail
+  - PlayerTrailAndBorders
+  - PlayerTwo
+  - PlayerTrailTwo
   layers:
   - Default
   - TransparentFX
